@@ -1,0 +1,41 @@
+BASE: ['']
+TOOLBOX_MODE: "unsupervised_method"     
+UNSUPERVISED:
+  METHOD: ["GREEN", "POS", "CHROM"]      
+  METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA']    # 평가지표. MAE/RMSE/MAPE=심박수 오차, Pearson=정답과의 상관계수, SNR=신호대잡음비(dB), BA=Bland-Altman 산점도
+                                                          # BA/Pearson은 표본이 2개 이상 있어야 의미 있게 계산됨. subject가 늘었으니 다시 포함
+  DATA:
+    FS: 30                               # 영상 프레임레이트(Hz). UBFC-rPPG는 30fps
+    DATASET: UBFC-rPPG                    # 사용할 데이터셋 로더 이름 (dataset/data_loader/UBFCrPPGLoader.py 를 사용하게 됨)
+    DO_PREPROCESS: False                  # 원본 비디오를 얼굴 크롭+리사이즈해서 캐시로 만들지 여부. 처음 실행하거나 subject를 추가/변경했을 때만 True로,
+                                           # 이후 같은 데이터로 다시 돌릴 땐 False로 두면 캐시를 재사용해서 훨씬 빠름 (30fps 기준선, 캐시 이미 있음)
+    DATA_FORMAT: NDHWC                    # 텐서 차원 순서: N=배치, D=프레임(depth), H/W=높이/너비, C=채널
+    DATA_PATH: "./dataset/UBFC"           # 원본 데이터 경로. subject48/vid.avi, ground_truth.txt 형태로 들어있어야 함
+    CACHED_PATH: "./PreprocessedData"     # 전처리(크롭된 프레임 numpy) 결과를 저장할 경로
+    EXP_DATA_NAME: ""                     # 캐시 폴더 이름. 비워두면 위 설정값들을 조합해 자동으로 긴 폴더명을 생성함
+    BEGIN: 0.0                            # 전체 subject 중 사용할 구간의 시작 비율 (0.0~1.0)
+    END: 1.0                              # 전체 subject 중 사용할 구간의 끝 비율. 예: subject 10명 중 앞 5명만 쓰려면 BEGIN 0.0 / END 0.5
+    PREPROCESS:
+      DATA_TYPE: ['Raw']                  # 프레임을 어떤 형태로 저장할지. 'Raw'(원본 그대로), 'DiffNormalized'(프레임 차분+정규화), 'Standardized' 등 지원.
+                                           # 여러 개 넣으면 채널을 이어붙여 저장(주로 딥러닝 모델용). 신호처리 방법은 보통 'Raw'만 있으면 됨
+      DATA_AUG: ['None']                  # 데이터 증강 여부. 'None' 또는 'Motion'(모션 증강된 데이터 경로를 쓸 때만 사용)
+      LABEL_TYPE: Raw                     # ground truth PPG 신호를 어떤 형태로 저장할지. 보통 DATA_TYPE과 맞춰줌
+      DO_CHUNK: False                     # 영상을 일정 길이(프레임 수)로 잘라 여러 클립으로 나눌지 여부. False면 영상 전체를 하나의 클립으로 사용
+      CHUNK_LENGTH: 180                   # DO_CHUNK가 True일 때, 한 클립의 프레임 수
+      CROP_FACE:
+        DO_CROP_FACE: True                # 얼굴 영역을 검출해서 크롭할지 여부
+        BACKEND: 'HC'                     # 얼굴 검출 방식. 'HC'=Haar Cascade(OpenCV 내장, 가볍고 빠름) / 'Y5F'=YOLO5Face(더 정확하지만 무거움)
+        USE_LARGE_FACE_BOX: True          # 검출된 얼굴 박스를 여유 있게 확장해서 크롭할지 여부
+        LARGE_BOX_COEF: 1.5               # 박스를 확장할 배수 (1.5배)
+        DETECTION:
+          DO_DYNAMIC_DETECTION: False     # 매 프레임마다 얼굴을 다시 검출할지(True, 정확하지만 느림) 아니면 첫 프레임 박스를 영상 내내 고정해서 쓸지(False, 빠름)
+          DYNAMIC_DETECTION_FREQUENCY : 30  # DO_DYNAMIC_DETECTION이 True일 때, 몇 프레임마다 한 번씩 다시 검출할지
+          USE_MEDIAN_FACE_BOX: False       # 동적 검출을 쓸 때, 검출된 여러 박스의 중앙값 박스를 쓸지 여부. DO_DYNAMIC_DETECTION이 True일 때만 의미 있음
+      RESIZE:
+        H: 72                             # 크롭된 얼굴 이미지를 최종적으로 리사이즈할 높이(px)
+        W: 72                             # 크롭된 얼굴 이미지를 최종적으로 리사이즈할 너비(px)
+INFERENCE:
+  EVALUATION_METHOD: "FFT"                # 심박수 추출 방식. "FFT"(주파수 영역에서 피크 검출) 또는 "peak detection"(시간 영역 파형에서 피크 개수로 계산)
+  EVALUATION_WINDOW:
+    USE_SMALLER_WINDOW: False             # 영상 전체를 한 번에 평가할지, 아니면 아래 WINDOW_SIZE 단위로 잘라서 여러 번 평가할지
+    WINDOW_SIZE: 10                       # USE_SMALLER_WINDOW가 True일 때 사용할 평가 구간 길이(초). 짧은 창으로 나누면 표본 수를 늘릴 수 있음

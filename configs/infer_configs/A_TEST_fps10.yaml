@@ -1,0 +1,38 @@
+BASE: ['']
+TOOLBOX_MODE: "unsupervised_method"
+UNSUPERVISED:
+  METHOD: ["GREEN", "POS", "CHROM"]
+  METRICS: ['MAE', 'RMSE', 'MAPE', 'Pearson', 'SNR', 'BA']
+  DATA:
+    FS: 10                                # ffmpeg로 10fps로 낮춘 영상이므로 FS도 10으로 맞춤
+    DATASET: UBFC-rPPG                    # 로더 선택용 이름은 그대로 유지 (UBFC-rPPG 고정)
+    DO_PREPROCESS: True
+    DATA_FORMAT: NDHWC
+    DATA_PATH: "./dataset/UBFC_fps10"     # 10fps로 리샘플링한 영상들이 있는 경로
+    CACHED_PATH: "./PreprocessedData"
+    EXP_DATA_NAME: "UBFC-rPPG_fps10"      # 다른 fps 실험과 캐시/출력 폴더가 겹치지 않도록 명시적으로 이름 지정
+    BEGIN: 0.0
+    END: 1.0
+    PREPROCESS:
+      DATA_TYPE: ['Raw']
+      DATA_AUG: ['None']
+      LABEL_TYPE: Raw
+      DO_CHUNK: False
+      CHUNK_LENGTH: 180
+      CROP_FACE:
+        DO_CROP_FACE: True
+        BACKEND: 'HC'
+        USE_LARGE_FACE_BOX: True
+        LARGE_BOX_COEF: 1.5
+        DETECTION:
+          DO_DYNAMIC_DETECTION: False
+          DYNAMIC_DETECTION_FREQUENCY : 30
+          USE_MEDIAN_FACE_BOX: False
+      RESIZE:
+        H: 72
+        W: 72
+INFERENCE:
+  EVALUATION_METHOD: "FFT"
+  EVALUATION_WINDOW:
+    USE_SMALLER_WINDOW: False
+    WINDOW_SIZE: 10

@@ -1,0 +1,1 @@
+{"dataset": "pure", "family": "algorithm", "method": "POS", "fps": 30, "subset": "_e015", "status": "ok", "n_items": 6, "log": "logs/auto/pure__POS__fps30_e015.log", "MAE": 0.0, "MAE_std": 0.0, "RMSE": 0.0, "RMSE_std": 0.0, "MAPE": 0.0, "MAPE_std": 0.0, "Pearson": 1.0, "Pearson_std": 0.0, "SNR": 6.24140617122115, "SNR_std": 1.0590608445124121}

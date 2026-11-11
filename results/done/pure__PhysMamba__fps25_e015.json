@@ -1,0 +1,1 @@
+{"dataset": "pure", "family": "deep", "method": "PhysMamba", "fps": 25, "subset": "_e015", "status": "ok", "n_items": 98, "log": "logs/auto/pure__PhysMamba__fps25_e015.log", "MAE": 0.0, "MAE_std": 0.0, "RMSE": 0.0, "RMSE_std": 0.0, "MAPE": 0.0, "MAPE_std": 0.0, "Pearson": 1.0, "Pearson_std": 0.0, "SNR": 6.255051277504297, "SNR_std": 0.3957925642164652}
